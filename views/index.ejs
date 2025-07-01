@@ -5,6 +5,9 @@
 
 <body>
     <div class="container">
+        <% if (errorMessage) { %>
+            <div class="error-box"><%= errorMessage %></div>
+        <% } %>
         <form class="post-edit-form" action="/add-new-post" method="POST">
             <input class="post-edit-input" name="post" type="text", placeholder="Post a message" />
             <button class="post-edit-button">Post</button>

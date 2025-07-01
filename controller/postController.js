@@ -3,48 +3,40 @@ const postModel = require('../models/postModel');
 const post = (req, res) => {
   postModel.find()
     .then(result => {
-      res.render('index', { title: 'Posts', posts: result });
+      res.render('index', { title: 'Posts', posts: result, errorMessage: null });
     })
     .catch(err => {
       console.log(err);
+      res.status(500).render('error', {
+        title: 'Error',
+        message: 'Could not load posts. Please try again later.'
+      });
     })
 };
 
-const addNewPost = (req, res) => {
-  let newPost = new postModel(req.body);
+const addNewPost = async (req, res) => {
+  const postText = req.body.post;
+
+  if (!postText || postText.length < 25) {
+    const posts = await postModel.find().sort({ createdAt: -1 });
+    return res.render('index', {
+      title: 'Posts',
+      posts: posts,
+      errorMessage: 'Post must be at least 25 characters long.'
+    });
+  }
+
+  const newPost = new postModel({ post: postText });
 
   newPost.save()
-    .then(savedPost => {
-      // const formattedDate = new Date(savedPost.createdAt).toLocaleDateString('en-US', {
-      //   day: 'numeric',
-      //   month: 'long',
-      //   year: 'numeric'
-      // });
-      
-      // console.log({
-      //   post: savedPost.post,
-      //   createdAt: formattedDate
-      // });
-
+    .then(() => {
       res.redirect('/');
     })
     .catch(err => {
-      console.log(err);
-    })
-    // .catch(async (err) => {
-    //   if (err.name === 'ValidationError') {
-    //     const posts = await postModel.find().sort({ createdAt: -1 });
-        
-    //     res.render('index', {
-    //       posts: posts,
-    //       errorMessage: err.errors.post.message,
-    //       title: 'Timeline - Add Post Error'
-    //     });
-    //   } else {
-    //     res.status(500).send('Server error');
-    //   }
-    // });
-}
+      console.error(err);
+      res.status(500).send('Server error');
+    });
+};
 
 const showPost = (req, res) => {
   const postId = req.params.id;
@@ -52,10 +44,14 @@ const showPost = (req, res) => {
 
   postModel.findById(postId)
      .then(result => {
-       res.render('post', { title: 'Post', post: result });
+       res.render('post', { title: 'Post', post: result, errorMessage: null });
      })
      .catch(err => {
       console.log(arr);
+      res.status(500).render('error', {
+        title: 'Error',
+        message: 'Could not load post. Please try again later.'
+      });
      })
 }
 
@@ -68,6 +64,10 @@ const deletePost = (req, res) => {
      })
      .catch(err => {
       console.log(err);
+      res.status(500).render('error', {
+        title: 'Error',
+        message: 'Could not delete post. Please try again later.'
+      });
      })
 
 }
@@ -77,10 +77,14 @@ const editPostPage = (req, res) => {
 
   postModel.findById(postId)
     .then(result => {
-      res.render('edit-post', { title: 'Edit Post', post: result })
+      res.render('edit-post', { title: 'Edit Post', post: result, errorMessage: null })
      })
     .catch(err => {
       console.log(err);
+      res.status(500).render('error', {
+        title: 'Error',
+        message: 'Could not load post for editing.'
+      });
     })
 }
 
@@ -96,6 +100,10 @@ const editPostForm = (req, res) => {
     })
     .catch(err => {
       console.error(err);
+      res.status(500).render('error', {
+        title: 'Error',
+        message: 'Could not update post. Please try again later.'
+      });
     });   
 }
 
@@ -112,3 +120,42 @@ module.exports = {
   editPostForm,
   notFoundPage,
 };
+
+
+
+
+// const addNewPost = (req, res) => {
+//   let newPost = new postModel(req.body);
+
+//   newPost.save()
+//     .then(savedPost => {
+//       // const formattedDate = new Date(savedPost.createdAt).toLocaleDateString('en-US', {
+//       //   day: 'numeric',
+//       //   month: 'long',
+//       //   year: 'numeric'
+//       // });
+      
+//       // console.log({
+//       //   post: savedPost.post,
+//       //   createdAt: formattedDate
+//       // });
+
+//       res.redirect('/');
+//     })
+//     // .catch(err => {
+//     //   console.log(err);
+//     // })
+//     .catch(async (err) => {
+//       if (err.name === 'ValidationError') {
+//         const posts = await postModel.find().sort({ createdAt: -1 });
+        
+//         res.render('index', {
+//           title: 'Posts',
+//           posts: posts,
+//           errorMessage: err.errors.post.message,
+//         });
+//       } else {
+//         res.status(500).send('Server error');
+//       }
+//     });
+// }
